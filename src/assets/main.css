@@ -1,0 +1,33 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  color: #303133;
+}
+
+/* 各功能页共用的版式:查询行 -> 提示 -> 操作按钮 -> 表格 -> 分页 */
+.query-form {
+  margin-bottom: 0;
+}
+
+.hint {
+  margin-bottom: 12px;
+}
+
+.toolbar {
+  margin-bottom: 12px;
+}
+
+.pager {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
