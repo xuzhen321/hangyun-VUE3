@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createCustomer, fetchCustomer, updateCustomer } from '@/api/customer'
-import { useStatusDictStore } from '@/stores/statusDict'
+import { useCustomerStatusDict } from '@/stores/statusDict'
 import { toPayload } from '@/utils/payload'
 
 const props = defineProps({
@@ -12,7 +12,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'success'])
 
-const dict = useStatusDictStore()
+const dict = useCustomerStatusDict()
 const formRef = ref(null)
 const loading = ref(false)
 const submitting = ref(false)

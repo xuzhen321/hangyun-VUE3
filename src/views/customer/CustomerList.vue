@@ -1,11 +1,18 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { batchDeleteCustomers, deleteCustomer, fetchCustomers } from '@/api/customer'
-import { statusTagType, useStatusDictStore } from '@/stores/statusDict'
+import { CUSTOMER_STATUS, tagStyleOf } from '@/constants/status'
+import { useCustomerStatusDict } from '@/stores/statusDict'
 import CustomerFormDialog from './CustomerFormDialog.vue'
 
-const dict = useStatusDictStore()
+const dict = useCustomerStatusDict()
+const route = useRoute()
+const router = useRouter()
+
+// 配色规则收在 constants/status.js,客户和订单两个页面共用一套
+const statusTag = id => tagStyleOf(CUSTOMER_STATUS, id)
 
 /** 查询条件。字段名按 api 层的入参约定走(name/qualification/validFrom/validTo/status) */
 const query = reactive({
@@ -93,6 +100,21 @@ function onRestore(row) {
   ElMessage.info('把状态改为「正常」后保存即可恢复')
 }
 
+/**
+ * 跳到"该客户名下的订单"页。
+ * 走 5.8 的 `/customers/{id}/orders` —— 按 id 精确查,不像订单列表那样只能按姓名前缀搜
+ * (所以同名客户不会混进来)。
+ */
+function onViewOrders(row) {
+  router.push({
+    name: 'customerOrders',
+    params: { id: row.id },
+    // name 带过去当标题(省一次客户详情请求);
+    // from 告诉那个页面「返回」该回到哪 —— 这里是客户列表
+    query: { name: row.name, from: 'customers' },
+  })
+}
+
 async function onDelete(row) {
   try {
     await ElMessageBox.confirm(
@@ -135,6 +157,12 @@ async function onBatchDelete() {
 }
 
 onMounted(() => {
+  // 从订单页点客户姓名 →「查询客户详细信息」跳过来时带着 ?name=,
+  // 把它填进姓名查询框,列表直接定位到这位客户。
+  // ⚠️ 客户列表没有 id 筛选参数,只能按姓名找,而姓名是**前缀匹配** ——
+  //    所以同名(或名字以它开头)的客户会一起列出来,这是接口本身的限制。
+  if (route.query.name) query.name = String(route.query.name)
+
   dict.load()
   loadList()
 })
@@ -241,13 +269,14 @@ onMounted(() => {
       <el-table-column label="状态" width="90">
         <template #default="{ row }">
           <!-- 直接用后端联表带出的中文描述,不再拿 status 去字典里 find -->
-          <el-tag :type="statusTagType(row.status)" effect="light">
+          <el-tag v-bind="statusTag(row.status)">
             {{ row.statusDescription }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column label="操作" width="250" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" @click="onViewOrders(row)">订单查询</el-button>
           <el-button link type="primary" @click="onEdit(row)">编辑</el-button>
           <el-button v-if="row.status === 3" link type="success" @click="onRestore(row)">
             恢复

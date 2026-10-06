@@ -1,7 +1,18 @@
 <script setup>
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+
+/**
+ * 菜单高亮项。
+ * 子页面(如 `/customers/:id/orders`「客户订单查询」)不属于任何菜单项,
+ * 直接用 route.path 去匹配会导致"哪个都不亮",所以把它归到所属的一级菜单上。
+ * 注意 `/customer-statuses` 不会被 `/customers` 前缀吃掉(第 10 个字符是 `-` 不是 `s`)。
+ */
+const activeMenu = computed(() =>
+  route.path.startsWith('/customers') ? '/customers' : route.path
+)
 </script>
 
 <template>
@@ -14,7 +25,11 @@ const route = useRoute()
     <el-container class="layout__body">
       <!-- 左侧折叠菜单 -->
       <el-aside width="200px" class="layout__aside">
-        <el-menu :default-active="route.path" :default-openeds="['customer']" router>
+        <el-menu
+          :default-active="activeMenu"
+          :default-openeds="['customer', 'order']"
+          router
+        >
           <el-menu-item index="/home">
             <el-icon><Guide /></el-icon>
             <span>首页</span>
@@ -32,6 +47,21 @@ const route = useRoute()
             <el-menu-item index="/customer-statuses">
               <el-icon><Tickets /></el-icon>
               <span>客户状态管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="order">
+            <template #title>
+              <el-icon><Van /></el-icon>
+              <span>订单管理</span>
+            </template>
+            <el-menu-item index="/orders">
+              <el-icon><Document /></el-icon>
+              <span>订单信息管理</span>
+            </el-menu-item>
+            <el-menu-item index="/order-statuses">
+              <el-icon><Collection /></el-icon>
+              <span>订单状态管理</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>

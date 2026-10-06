@@ -70,3 +70,31 @@ export const deleteCustomer = id => request.delete(`/customers/${id}`)
  */
 export const batchDeleteCustomers = ids =>
   request.delete('/customers/batch', { data: { ids } })
+
+/**
+ * 客户下拉搜索 —— 新增/修改**订单**时选客户用。
+ *
+ * `name` **前缀匹配**(和 5.1 列表同一套规则),不传则返回前 20 条。
+ * 不是分页接口:data 直接是数组,只返回 `{id, name, phone}` 三个字段。
+ * **已注销的客户不会出现在候选里。**
+ *
+ * ⚠️ 下拉框必须用这个,不要拿 5.1 的列表接口代替(字段多、还多一条 COUNT 查询)。
+ *    `phone` 是用来区分**同名客户**的,选项里要一起显示。
+ */
+export const searchCustomerOptions = name =>
+  request.get('/customers/options', { params: { name: name || undefined } })
+
+/**
+ * 查询**某个客户名下**的订单(分页)。客户列表操作列的"订单查询"用它。
+ *
+ * ⚠️ 和 7.1 的 `/orders` 列表**口径不同**:这个接口**包含已取消的订单** ——
+ *    它要的是"这个客户的完整往来记录",所以不做状态过滤,也不接受状态/日期筛选。
+ *    同一个客户在两个接口看到的条数可能不一样,这是故意的,不是谁算错了。
+ *
+ * ⚠️ 客户不存在时返回 **404**(而不是空列表)—— 这样前端能区分
+ *    "这个客户确实没有订单" 和 "客户 id 传错了"。所以 404 要单独处理,别当成"没有订单"。
+ *
+ * 只有 page/size 两个参数,客户 id 在路径里。
+ */
+export const fetchCustomerOrders = (customerId, { page = 1, size = 20 } = {}) =>
+  request.get(`/customers/${customerId}/orders`, { params: { page, size } })
