@@ -1,5 +1,6 @@
 <script setup>
 import { h, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   batchDeleteCargoTypes,
@@ -17,6 +18,31 @@ const selectedRows = ref([])
 
 const dialogVisible = ref(false)
 const editingId = ref(null)
+
+const route = useRoute()
+const router = useRouter()
+
+// 点货物名称 → 先弹个确认框,确认后跳到订单货物页按名称筛
+const cargoDialogVisible = ref(false)
+const activeCargoName = ref(null)
+
+/**
+ * 点货物名称 → 看这个货物种类被哪些订单用到了。
+ * 单元格文字点了不像是明确的操作意图,容易误触,所以先问一句。
+ */
+function onViewCargo(row) {
+  activeCargoName.value = row.name
+  cargoDialogVisible.value = true
+}
+
+/**
+ * ⚠️ 订单货物那边只提供了 `cargoTypeName` 参数,而且是**前缀匹配**,没有按种类 id 精确筛的入口。
+ * 所以点「钢材」也会把「钢材卷」的明细一起带出来。这是接口的限制,不是实现问题。
+ */
+function onConfirmViewCargo() {
+  router.push({ path: '/cargos', query: { cargoTypeName: activeCargoName.value } })
+  cargoDialogVisible.value = false
+}
 
 /** 重量/体积是数字,可空 —— 空的时候显示占位符,不要显示成 0 */
 const fmtNum = v =>
@@ -129,7 +155,13 @@ async function onBatchDelete() {
   }
 }
 
-onMounted(loadList)
+onMounted(() => {
+  // 从订单货物页点「货物种类」跳过来时带着 ?name=,填进查询框直接定位。
+  // ⚠️ 名称是**前缀匹配**,所以点「钢材」也会把「钢材卷」一起列出来 —— 接口就这一个维度。
+  if (route.query.name) query.name = String(route.query.name)
+
+  loadList()
+})
 </script>
 
 <template>
@@ -180,7 +212,14 @@ onMounted(loadList)
     >
       <el-table-column type="selection" width="48" />
       <!-- 不显示自增 id:它是内部标识,用户拿着做不了任何事 -->
-      <el-table-column prop="name" label="货物名称" min-width="140" show-overflow-tooltip />
+      <el-table-column label="货物名称" min-width="140" show-overflow-tooltip>
+        <template #default="{ row }">
+          <!-- 点名称 → 看这个货物种类被哪些订单用到 -->
+          <el-button link type="primary" @click="onViewCargo(row)">
+            {{ row.name }}
+          </el-button>
+        </template>
+      </el-table-column>
       <el-table-column
         prop="description"
         label="货物描述"
@@ -216,5 +255,46 @@ onMounted(loadList)
     />
 
     <CargoTypeFormDialog v-model="dialogVisible" :id="editingId" @success="loadList" />
+
+    <!-- 点货物名称弹出的确认框 -->
+    <el-dialog
+      v-model="cargoDialogVisible"
+      title="订单货物"
+      width="420px"
+      align-center
+    >
+      <div class="detail-line">
+        <span class="detail-line__label">货物种类</span>
+        <span class="detail-line__value">{{ activeCargoName }}</span>
+      </div>
+      <p class="dialog-question">是否查询该货物种类下的订单货物?</p>
+
+      <template #footer>
+        <el-button type="primary" @click="onConfirmViewCargo">查询</el-button>
+        <el-button @click="cargoDialogVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
+
+<style scoped>
+.detail-line {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 15px;
+}
+
+.detail-line__label {
+  color: #909399;
+}
+
+.detail-line__value {
+  font-weight: 600;
+}
+
+.dialog-question {
+  margin: 16px 0 0;
+  color: #606266;
+}
+</style>

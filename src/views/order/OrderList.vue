@@ -6,6 +6,7 @@ import { batchDeleteOrders, deleteOrder, fetchOrders } from '@/api/order'
 import { ORDER_STATUS, tagStyleOf } from '@/constants/status'
 import { useOrderStatusDict } from '@/stores/statusDict'
 import OrderFormDialog from './OrderFormDialog.vue'
+import CargoFormDialog from '@/components/CargoFormDialog.vue'
 
 const dict = useOrderStatusDict()
 const router = useRouter()
@@ -31,6 +32,22 @@ const editingId = ref(null)
 // 点客户姓名弹出的操作表单
 const customerDialogVisible = ref(false)
 const activeCustomer = ref(null) // 来自被点击的那一行订单：{ id, name }
+
+// 「货物增加」弹窗
+const cargoFormVisible = ref(false)
+const cargoFormOrderId = ref(null)
+
+/**
+ * 给这张订单加货物。
+ *
+ * 📌 **新增入口只放在这里,订单货物页没有"新增"按钮** ——
+ *    `POST /cargos` 的 `orderId` 是必填的,货物必须挂在订单下,不能凭空建。
+ *    从订单行进来,订单号由这一行带过去,用户不用手填(19 位数字手敲必错)。
+ */
+function onAddCargo(row) {
+  cargoFormOrderId.value = row.id // 订单号字符串,原样带过去
+  cargoFormVisible.value = true
+}
 
 async function loadList() {
   loading.value = true
@@ -123,6 +140,14 @@ function onViewCustomerOrders() {
 function onViewCustomerDetail() {
   router.push({ path: '/customers', query: { name: activeCustomer.value.name } })
   customerDialogVisible.value = false
+}
+
+/**
+ * 跳到"这单装了哪些货"。
+ * 订单号按**精确匹配**查(后端就是这么设计的,见文档 10.1),所以整串带过去,不做任何转换。
+ */
+function onViewCargo(row) {
+  router.push({ path: '/cargos', query: { orderId: row.id } })
 }
 
 async function onDelete(row) {
@@ -261,6 +286,7 @@ onMounted(() => {
       @selection-change="onSelectionChange"
     >
       <el-table-column type="selection" width="48" />
+      <!-- 订单号不做成链接:看货物走操作列的「货物查询」按钮更直观 -->
       <el-table-column prop="id" label="订单号" width="200" />
       <el-table-column label="客户姓名" width="120">
         <template #default="{ row }">
@@ -288,13 +314,15 @@ onMounted(() => {
         </template>
       </el-table-column>
       <el-table-column prop="insertTime" label="创建时间" width="170" />
-      <el-table-column label="操作" width="130" fixed="right">
+      <el-table-column label="操作" width="270" fixed="right">
         <template #default="{ row }">
           <!--
             已取消的订单**也保留"编辑"**(接口不拦,后端明确要求前端承担这个约束),
             但没有"恢复"按钮 —— 取消代表这笔单结束,产品上不给撤销入口。
-            所以操作列不依赖 status,任何状态都只有这两个按钮。
+            所以操作列不依赖 status,任何状态都只有这几个按钮。
           -->
+          <el-button link type="primary" @click="onViewCargo(row)">货物查询</el-button>
+          <el-button link type="primary" @click="onAddCargo(row)">货物增加</el-button>
           <el-button link type="primary" @click="onEdit(row)">编辑</el-button>
           <el-button link type="danger" @click="onDelete(row)">删除</el-button>
         </template>
@@ -335,6 +363,12 @@ onMounted(() => {
         <el-button @click="customerDialogVisible = false">取消</el-button>
       </template>
     </el-dialog>
+
+    <!--
+      给这张订单加货物(新增入口)。
+      不监听 success:订单列表的字段里没有货物信息,加完货物这一页没有任何变化,不需要刷新。
+    -->
+    <CargoFormDialog v-model="cargoFormVisible" :order-id="cargoFormOrderId" />
   </div>
 </template>
 

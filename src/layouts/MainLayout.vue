@@ -74,6 +74,10 @@ const activeMenu = computed(() =>
               <el-icon><Goods /></el-icon>
               <span>货物种类管理</span>
             </el-menu-item>
+            <el-menu-item index="/cargos">
+              <el-icon><List /></el-icon>
+              <span>订单货物管理</span>
+            </el-menu-item>
           </el-sub-menu>
         </el-menu>
       </el-aside>

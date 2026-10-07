@@ -67,3 +67,15 @@ export const deleteCargoType = id => request.delete(`/cargo-types/${id}`)
  */
 export const batchDeleteCargoTypes = ids =>
   request.delete('/cargo-types/batch', { data: { ids } })
+
+/**
+ * 货物种类下拉框(文档 9.7)—— 给"新增货物"选种类用。
+ *
+ * ⚠️ **一次性返回全部种类,不截断** —— 这点和 `/customers/options`、`/ports/options`
+ *    (都是"最多 20 条")**不一样**。因为货物种类是字典表、条数少,一次性加载让人直接挑更省事;
+ *    截断到 20 条反而会把后面的种类藏起来、搜都搜不到。
+ *
+ * 所以前端**拉到本地用 el-select 的 filterable 本地过滤即可**,不用做成远程搜索。
+ */
+export const fetchCargoTypeOptions = name =>
+  request.get('/cargo-types/options', { params: { name: name || undefined } })

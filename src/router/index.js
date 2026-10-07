@@ -51,6 +51,13 @@ const routes = [
         component: () => import('@/views/cargoType/CargoTypeList.vue'),
         meta: { title: '货物种类管理' },
       },
+      {
+        // 只读。订单列表的「货物查询」会带着 ?orderId= 跳到这里
+        path: 'cargos',
+        name: 'cargos',
+        component: () => import('@/views/cargo/CargoList.vue'),
+        meta: { title: '订单货物管理' },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/home' },
