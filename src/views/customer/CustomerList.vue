@@ -236,7 +236,7 @@ onMounted(() => {
 
     <el-alert type="info" :closable="false" show-icon class="hint">
       <template #title>
-        姓名 / 资质是<strong>前缀匹配</strong>,只能从开头匹配 —— 输入「张」能查到张伟,输入「马」查不到司马强。
+        姓名 / 资质只能从<strong>开头</strong>匹配 —— 输入「张」能查到张伟,输入「马」查不到司马强。
         另外,不选状态时<strong>已注销的客户不会出现在列表里</strong>,要看已注销客户请把状态选成「注销」。
       </template>
     </el-alert>

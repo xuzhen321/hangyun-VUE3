@@ -45,6 +45,12 @@ const routes = [
         component: () => import('@/views/orderStatus/OrderStatusList.vue'),
         meta: { title: '订单状态管理' },
       },
+      {
+        path: 'cargo-types',
+        name: 'cargoTypes',
+        component: () => import('@/views/cargoType/CargoTypeList.vue'),
+        meta: { title: '货物种类管理' },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/home' },

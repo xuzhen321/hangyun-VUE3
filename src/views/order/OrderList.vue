@@ -236,7 +236,7 @@ onMounted(() => {
 
     <el-alert type="info" :closable="false" show-icon class="hint">
       <template #title>
-        客户姓名是<strong>前缀匹配</strong>,只能从开头匹配,同名客户会被一起搜出来。
+        客户姓名只能从<strong>开头</strong>匹配,同名客户会被一起搜出来。
         不选状态时<strong>已取消的订单不会出现在列表里</strong>,要看已取消订单请把状态选成「已取消」。
       </template>
     </el-alert>
