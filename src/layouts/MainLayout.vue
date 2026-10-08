@@ -27,7 +27,7 @@ const activeMenu = computed(() =>
       <el-aside width="200px" class="layout__aside">
         <el-menu
           :default-active="activeMenu"
-          :default-openeds="['customer', 'order', 'cargo', 'container']"
+          :default-openeds="['customer', 'order', 'cargo', 'container', 'company']"
           router
         >
           <el-menu-item index="/home">
@@ -89,6 +89,10 @@ const activeMenu = computed(() =>
               <el-icon><TakeawayBox /></el-icon>
               <span>集装箱管理</span>
             </template>
+            <el-menu-item index="/containers">
+              <el-icon><Suitcase /></el-icon>
+              <span>集装箱信息管理</span>
+            </el-menu-item>
             <el-menu-item index="/container-types">
               <el-icon><Postcard /></el-icon>
               <span>箱型管理</span>
@@ -96,6 +100,17 @@ const activeMenu = computed(() =>
             <el-menu-item index="/container-statuses">
               <el-icon><Switch /></el-icon>
               <span>集装箱状态管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="company">
+            <template #title>
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>公司管理</span>
+            </template>
+            <el-menu-item index="/companies">
+              <el-icon><Briefcase /></el-icon>
+              <span>公司信息管理</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>

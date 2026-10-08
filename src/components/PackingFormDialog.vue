@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createPackingRecord, updatePackingRecord } from '@/api/packingRecord'
 import { searchCargoOptions } from '@/api/cargo'
-import { fetchContainers } from '@/api/container'
+import { fetchContainerOptions } from '@/api/container'
 import { debounce } from '@/utils/debounce'
 
 /**
@@ -127,15 +127,26 @@ async function loadCargos(keyword) {
   }
 }
 
+/**
+ * 箱号下拉用 **12.7 的 `/containers/options`** —— 它是专门给这个场景做的。
+ *
+ * 比列表接口多两点好处:
+ *   1. 多返回一个 `statusDescription`,**显示出来让用户知道这箱子现在能不能用**
+ *   2. **已删除的集装箱不会出现在候选里**(它们不能再装货,12.5),不用自己过滤
+ */
 async function loadContainers(keyword) {
   containerLoading.value = true
   const seq = ++containerSeq
   try {
-    const res = await fetchContainers({ no: keyword, size: 20 })
+    const list = await fetchContainerOptions(keyword)
     if (seq !== containerSeq) return
-    const found = (res.list || []).map(c => {
+    const found = (list || []).map(c => {
       containerLabels.value[c.no] = c.no
-      return { value: c.no, label: c.no, sub: c.typeName || '' }
+      return {
+        value: c.no,
+        label: c.no,
+        sub: c.statusDescription || '',
+      }
     })
     containerOptions.value = withSelected(found, [containerAsOption(form.containerNo)])
   } catch {

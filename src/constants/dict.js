@@ -13,6 +13,36 @@
  *   hint         页面顶部提示条文案
  */
 
+/**
+ * 公司信息(文档 15 节)。
+ *
+ * 📌 这是一张**通用字典表** —— 箱主、操作方、船东、管理公司都指向它,目前只有集装箱在用。
+ *
+ * ⚠️ 和另外几个字典的两点不同:
+ *   1. **列表带关键字查询**(`keyword` 前缀匹配,同时匹配名称和代码);其余几个字典都只能分页
+ *   2. **不配 useDict** —— 它的下拉接口 `/companies/options` **只返回前 20 条**,
+ *      不是"一次拉全量",缓存一份没意义;集装箱表单那边会做成远程搜索
+ */
+export const COMPANY = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '集装箱',
+  name: '公司',
+  columns: [
+    { prop: 'name', label: '公司名称', max: 100, required: true },
+    { prop: 'code', label: '公司代码', max: 20, required: false },
+  ],
+  search: {
+    param: 'keyword',
+    label: '关键字',
+    placeholder: '公司名称或代码开头几个字',
+  },
+  hint:
+    '关键字是**前缀匹配**,同时匹配公司名称和公司代码(传 COS 命中代码 COSU,传 中远 命中"中远…"开头的公司)。' +
+    '公司名和代码**都没有唯一约束**,允许重名、允许代码重复,这是正常的。' +
+    '删除时如果还有集装箱把它当**箱主或操作方**,后端会拒绝并说明原因。公司不支持批量删除。',
+}
+
 /** 客户状态:内置 1 正常 / 2 异常 / 3 注销 */
 export const CUSTOMER_STATUS = {
   builtinIds: [1, 2, 3],
@@ -74,8 +104,17 @@ export const CONTAINER_TYPE = {
  *    其余几条(1-6)只要没被集装箱引用,都能改、都能删。
  *    ── 注意这一点**改过一次**:早先文档说的是"没有内置概念",所以这里原本传的是空数组。
  */
+/**
+ * 集装箱状态里"已删除"的 id。
+ *
+ * 集装箱的逻辑删除(12.5)就是改到它,被代码写死依赖 —— 所以它既是**内置不可改删**的,
+ * 也是**不该让用户手动选**的:新增/编辑集装箱时那个下拉要把它过滤掉,
+ * 否则用户一不小心就把新箱子建成"已删除"了。
+ */
+export const CONTAINER_STATUS_DELETED_ID = 7
+
 export const CONTAINER_STATUS = {
-  builtinIds: [7],
+  builtinIds: [CONTAINER_STATUS_DELETED_ID],
   builtinLabel: '已删除',
   entityWord: '集装箱',
   name: '集装箱状态',

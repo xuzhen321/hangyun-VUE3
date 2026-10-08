@@ -66,6 +66,12 @@ const routes = [
         meta: { title: '装箱情况登记管理' },
       },
       {
+        path: 'containers',
+        name: 'containers',
+        component: () => import('@/views/container/ContainerList.vue'),
+        meta: { title: '集装箱信息管理' },
+      },
+      {
         path: 'container-types',
         name: 'containerTypes',
         component: () => import('@/views/containerType/ContainerTypeList.vue'),
@@ -76,6 +82,13 @@ const routes = [
         name: 'containerStatuses',
         component: () => import('@/views/containerStatus/ContainerStatusList.vue'),
         meta: { title: '集装箱状态管理' },
+      },
+      {
+        // 通用字典表:箱主 / 操作方 / 船东 / 管理公司都指向它,目前只有集装箱在用
+        path: 'companies',
+        name: 'companies',
+        component: () => import('@/views/company/CompanyList.vue'),
+        meta: { title: '公司信息管理' },
       },
     ],
   },
