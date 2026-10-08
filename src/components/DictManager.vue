@@ -44,6 +44,16 @@ const { api, columns, hint, name } = props.config
  */
 const dict = props.config.useDict ? props.config.useDict() : null
 
+/**
+ * 主键字段名,默认 `id`。
+ * 有些表的主键**不是自增 id** —— 比如拖车的主键是拖车号 `no`。
+ */
+const keyField = props.config.keyField ?? 'id'
+const keyOf = row => row[keyField]
+
+/** 这一行是不是"内置"的(没有内置概念的字典恒为 false) */
+const isBuiltinRow = row => hasBuiltin && isBuiltin(keyOf(row))
+
 /** 可选的列表关键字查询。不配就没有查询框 */
 const searchCfg = props.config.search ?? null
 const keyword = ref('')
@@ -180,7 +190,7 @@ async function onSave(row) {
   }
 
   try {
-    await api.update(row.id, collect(row, '_'))
+    await api.update(keyOf(row), collect(row, '_'))
     ElMessage.success('保存成功')
     afterMutate()
   } catch {
@@ -199,7 +209,7 @@ async function onDelete(row) {
   }
 
   try {
-    await api.remove(row.id)
+    await api.remove(keyOf(row))
     ElMessage.success('删除成功')
     afterMutate()
   } catch {
@@ -278,11 +288,15 @@ onMounted(() => {
         min-width="180"
       >
         <template #default="{ row }">
-          <!-- 内置行置灰:后端也会拒绝改,别让用户改了才收到 409 -->
+          <!--
+            两种情况下置灰:
+              1. 内置行 —— 后端也会拒绝改,别让用户改了才收到 409
+              2. 列上标了 immutable —— 一般是主键(如拖车号),建了就不能改
+          -->
           <el-input
             v-model="row['_' + col.prop]"
             :maxlength="col.max"
-            :disabled="hasBuiltin && isBuiltin(row.id)"
+            :disabled="isBuiltinRow(row) || col.immutable"
             @input="row._dirty = isDirty(row)"
           />
         </template>
@@ -305,7 +319,7 @@ onMounted(() => {
 
           <!-- 禁用的按钮不触发鼠标事件,tooltip 要包一层 span 才能生效 -->
           <el-tooltip
-            :disabled="!(hasBuiltin && isBuiltin(row.id))"
+            :disabled="!isBuiltinRow(row)"
             :content="`系统内置状态(${builtinLabel})不允许修改`"
             placement="top"
           >
@@ -313,7 +327,7 @@ onMounted(() => {
               <el-button
                 link
                 type="primary"
-                :disabled="(hasBuiltin && isBuiltin(row.id)) || !row._dirty"
+                :disabled="isBuiltinRow(row) || !row._dirty"
                 @click="onSave(row)"
               >
                 保存
@@ -322,7 +336,7 @@ onMounted(() => {
           </el-tooltip>
 
           <el-tooltip
-            :disabled="!(hasBuiltin && isBuiltin(row.id))"
+            :disabled="!isBuiltinRow(row)"
             :content="`系统内置状态(${builtinLabel})不允许删除`"
             placement="top"
           >
@@ -330,7 +344,7 @@ onMounted(() => {
               <el-button
                 link
                 type="danger"
-                :disabled="hasBuiltin && isBuiltin(row.id)"
+                :disabled="isBuiltinRow(row)"
                 @click="onDelete(row)"
               >
                 删除

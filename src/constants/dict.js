@@ -14,6 +14,37 @@
  */
 
 /**
+ * 拖车管理(文档 16 节)。"哪个拖车、司机是谁" —— 提空箱登记要引用拖车号,所以先得有这张表。
+ *
+ * ⚠️ 和另外几个字典的三点不同:
+ *   1. **主键是拖车号 `no`(字符串),不是自增 id** → 要配 `keyField: 'no'`
+ *   2. **拖车号建了就不能改**(后端 UPDATE 里根本没有这一列)→ 那一列标 `immutable`
+ *   3. 和公司一样,**下拉接口只返回前 20 条**,不是全量,所以**不配 useDict**
+ */
+export const TRAILER = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '拖车',
+  name: '拖车',
+  keyField: 'no',
+  columns: [
+    // immutable:只在"行内编辑"时置灰;新增弹窗里照样要填
+    { prop: 'no', label: '拖车号', max: 30, required: true, immutable: true },
+    { prop: 'name', label: '司机姓名', max: 50, required: false },
+    { prop: 'phone', label: '联系电话', max: 30, required: false },
+  ],
+  search: {
+    param: 'keyword',
+    label: '关键字',
+    placeholder: '拖车号或司机姓名开头几个字',
+  },
+  hint:
+    '关键字是**前缀匹配**,同时匹配拖车号和司机姓名。' +
+    '拖车号是主键,**建好之后不能修改** —— 要换号只能删了重建;而且不能重复。' +
+    '删除时如果还有提空箱记录用了它,后端会拒绝并说明原因。拖车不支持批量删除。',
+}
+
+/**
  * 公司信息(文档 15 节)。
  *
  * 📌 这是一张**通用字典表** —— 箱主、操作方、船东、管理公司都指向它,目前只有集装箱在用。

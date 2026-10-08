@@ -101,6 +101,14 @@ const activeMenu = computed(() =>
               <el-icon><Switch /></el-icon>
               <span>集装箱状态管理</span>
             </el-menu-item>
+            <el-menu-item index="/trailers">
+              <el-icon><Odometer /></el-icon>
+              <span>拖车管理</span>
+            </el-menu-item>
+            <el-menu-item index="/container-trailer-records">
+              <el-icon><DocumentChecked /></el-icon>
+              <span>提空箱登记</span>
+            </el-menu-item>
           </el-sub-menu>
 
           <el-sub-menu index="company">

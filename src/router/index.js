@@ -84,6 +84,19 @@ const routes = [
         meta: { title: '集装箱状态管理' },
       },
       {
+        path: 'trailers',
+        name: 'trailers',
+        component: () => import('@/views/trailer/TrailerList.vue'),
+        meta: { title: '拖车管理' },
+      },
+      {
+        path: 'container-trailer-records',
+        name: 'containerTrailerRecords',
+        component: () =>
+          import('@/views/containerTrailerRecord/ContainerTrailerRecordList.vue'),
+        meta: { title: '提空箱登记' },
+      },
+      {
         // 通用字典表:箱主 / 操作方 / 船东 / 管理公司都指向它,目前只有集装箱在用
         path: 'companies',
         name: 'companies',
