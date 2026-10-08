@@ -95,6 +95,17 @@ function onViewVoyage(row) {
   router.push({ path: '/voyages', query: { no: row.voy } })
 }
 
+/**
+ * 查看船舶 —— 跳「船舶信息管理」,把船名预填进那边的关键字查询。
+ *
+ * ⚠️ 只能用**船名**筛,而且它是**前缀匹配**,不是按 id 精确查 ——
+ *    事件行里只有 `vslName`(船名)**没有 `vslId`**,和航次那个是同一个毛病。
+ *    我们带的是完整船名,所以实际只命中它自己(以及名字以它开头的),但严格说不是精确定位。
+ */
+function onViewVessel(row) {
+  router.push({ path: '/vessels', query: { keyword: row.vslName } })
+}
+
 async function onDelete(row) {
   try {
     await ElMessageBox.confirm(
@@ -266,20 +277,15 @@ onMounted(() => {
             查看航次
           </el-button>
 
-          <!--
-            ⚠️ 「查看船舶」暂时**置灰** —— 船舶模块还没做,它现在没有目的地。
-            直接放一个点了没反应的按钮,比置灰更糟(用户会以为坏了)。
-            等船舶模块做完,把 disabled 去掉、换成跳转即可。
-            另外注意:事件行里只有 `vslName`(船名),没有 `vslId`,到时候也得先解决这个。
-          -->
-          <el-tooltip
-            content="船舶模块还没做,做完之后这里会跳到该船舶"
-            placement="top"
+          <!-- 没关联船舶时不给点:跳过去只能是一张没过滤的全量列表 -->
+          <el-button
+            link
+            type="primary"
+            :disabled="!row.vslName"
+            @click="onViewVessel(row)"
           >
-            <span>
-              <el-button link type="primary" disabled>查看船舶</el-button>
-            </span>
-          </el-tooltip>
+            查看船舶
+          </el-button>
 
           <el-button link type="primary" @click="onEdit(row)">编辑</el-button>
           <el-button link type="danger" @click="onDelete(row)">删除</el-button>

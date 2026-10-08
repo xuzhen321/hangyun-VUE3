@@ -189,3 +189,162 @@ export const CONTAINER_STATUS = {
     '**只有「已删除」这一条是内置的**(集装箱的逻辑删除就是改到它),不允许修改、不允许删除,已置灰;' +
     '其余几条只要没被集装箱引用,都能改、都能删。集装箱状态不支持批量删除。',
 }
+
+// ===========================================================================
+// 港口的五个小字典(文档 25 节)
+//
+// 这五个接口形状**完全一样**(分页 / options / 详情 / 增删改),差别只有两点:
+//   1. 唯一的业务字段不同
+//   2. **区域名和时区的两个字段有唯一约束,尺寸/级别/类型没有**
+// 所以配置写得很像,这是对的 —— 它们本来就是同一套东西。
+// ===========================================================================
+
+/** 港口区域。区域名唯一 */
+export const PORT_AREA = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '港口',
+  name: '港口区域',
+  columns: [{ prop: 'areaName', label: '区域名称', max: 50, required: true }],
+  search: { param: 'keyword', label: '关键字', placeholder: '区域名称开头几个字' },
+  hint:
+    '区域名称**唯一**,重复会返回 409。' +
+    '删除时如果还有港口在用这个区域,后端会拒绝并说明原因。' +
+    '⚠️ 报的条数**包含已删除的港口** —— 所以"列表里一个港口都看不见却删不掉"是正常的,' +
+    '别拿列表条数去对。港口区域不支持批量删除。',
+}
+
+/**
+ * 港口时区。**两个字段都必填、都唯一**。
+ *
+ * ⚠️ 每个 UTC 偏移只能出现一次 —— 上海和新加坡都是 UTC+8,但表里只有一条 `UTC+08:00`,
+ *    新加坡港用的也是同一条。
+ */
+export const PORT_TIMEZONE = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '港口',
+  name: '港口时区',
+  columns: [
+    { prop: 'timezoneUtc8', label: 'UTC 偏移', max: 20, required: true },
+    { prop: 'timezoneAsiaShanghai', label: '时区名', max: 50, required: true },
+  ],
+  search: { param: 'keyword', label: '关键字', placeholder: '时区开头几个字' },
+  hint:
+    '**两个字段都必填,而且都唯一** —— 每个 UTC 偏移只能出现一次(所以上海和新加坡共用一条 UTC+08:00)。' +
+    '删除时如果还有港口在用这个时区,后端会拒绝。港口时区不支持批量删除。',
+}
+
+/** 港口尺寸。没有唯一约束 */
+export const HARBOR_SIZE = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '港口',
+  name: '港口尺寸',
+  columns: [{ prop: 'size', label: '尺寸', max: 20, required: true }],
+  search: { param: 'keyword', label: '关键字', placeholder: '尺寸开头几个字' },
+  hint:
+    '这一栏**没有唯一约束**,允许重复,这是正常的。' +
+    '删除时如果还有港口在用,后端会拒绝。港口尺寸不支持批量删除。',
+}
+
+/**
+ * 港口级别。**这一列是数字,不是文本。**
+ *
+ * 📌 它是五个小字典里**唯一没有关键字搜索**的 —— 数字做前缀搜索没意义,后端也没提供。
+ */
+export const PORT_LEVEL = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '港口',
+  name: '港口级别',
+  columns: [
+    {
+      prop: 'level',
+      label: '级别',
+      kind: 'number',
+      min: 0,
+      numMax: 9999,
+      precision: 0,
+      required: true,
+    },
+  ],
+  // 刻意不配 search:后端只提供分页,数字做前缀搜索没意义
+  hint:
+    '级别是一个**非负整数**。这一栏**没有唯一约束**,允许重复。' +
+    '删除时如果还有港口在用,后端会拒绝。港口级别不支持批量删除,也**没有关键字搜索**。',
+}
+
+/** 港口类型。没有唯一约束 */
+export const PORT_TYPE = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '港口',
+  name: '港口类型',
+  columns: [{ prop: 'type', label: '类型名称', max: 20, required: true }],
+  search: { param: 'keyword', label: '关键字', placeholder: '类型名称开头几个字' },
+  hint:
+    '这一栏**没有唯一约束**,允许重复,这是正常的。' +
+    '删除时如果还有港口在用,后端会拒绝。港口类型不支持批量删除。',
+}
+
+// ===========================================================================
+// 船舶相关(文档 21 / 22 节)
+// ===========================================================================
+
+/**
+ * 国家字典。
+ *
+ * 📌 **共用表** —— 船舶的"船旗国"和港口的"所在国家"用的是同一张表、同一组接口。
+ *    所以删除时会**同时查船舶和港口两处引用**,两处都干净才允许删。
+ */
+export const COUNTRY = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '船舶',
+  name: '国家',
+  columns: [
+    { prop: 'countryCode', label: '国家代码', max: 10, required: true },
+    { prop: 'countryCnname', label: '中文名', max: 100, required: false },
+    { prop: 'countryEnname', label: '英文名', max: 100, required: false },
+  ],
+  search: {
+    param: 'keyword',
+    label: '关键字',
+    placeholder: '代码 / 中文名 / 英文名开头几个字',
+  },
+  hint:
+    '国家代码**唯一**(如 CN),重复会返回 409;中英文名可空、不查重。' +
+    '删除时如果还有**船舶把它当船旗国**或**港口把它当所在国家**,后端会拒绝并说明原因(两处都会查)。' +
+    '国家不支持批量删除。',
+}
+
+/**
+ * 船舶类型字典。一条记录是"类型名 + 五个规格数值"。
+ *
+ * 📌 这几个数值是**该类船的典型规格(参考值)**,不是具体某条船的参数 ——
+ *    所以同型号的船在船舶列表里这几个数会一样。
+ */
+export const SHIP_TYPE = {
+  builtinIds: [],
+  builtinLabel: '',
+  entityWord: '船舶',
+  name: '船舶类型',
+  columns: [
+    { prop: 'type', label: '类型名称', max: 50, required: true },
+    { prop: 'gt', label: '总吨', kind: 'number', min: 0, numMax: 9999999999.99, precision: 2, required: true },
+    { prop: 'nt', label: '净吨', kind: 'number', min: 0, numMax: 9999999999.99, precision: 2, required: true },
+    { prop: 'dwt', label: '载重吨', kind: 'number', min: 0, numMax: 9999999999.99, precision: 2, required: true },
+    { prop: 'length', label: '长度', kind: 'number', min: 0, numMax: 999999.99, precision: 2, required: true },
+    { prop: 'width', label: '宽度', kind: 'number', min: 0, numMax: 999999.99, precision: 2, required: true },
+  ],
+  search: { param: 'keyword', label: '关键字', placeholder: '类型名称开头几个字' },
+  hint:
+    '**六个字段全部必填**,都没有唯一约束(允许重复)。' +
+    '后面五个是**数字规格**(单位为吨 / 米)——' +
+    '船舶列表里的「总吨 / 净吨 / 载重吨 / 长度 / 宽度」五列就是从**船型**联出来的,' +
+    '船型不填,挂这个船型的**每一条船**那五列都会是空白,所以约束放在船型这一层。' +
+    '这几个是**该类船的典型规格**,不是某条具体船的参数 —— 所以同型号的船这几个数会一样。' +
+    '删除时如果有船舶在用这个船型,后端会拒绝。⚠️ 报的条数包含已删除的船舶,别拿列表条数去对。' +
+    '船舶类型不支持批量删除。',
+}

@@ -152,7 +152,9 @@ onMounted(() => {
     <el-alert type="info" :closable="false" show-icon class="hint">
       <template #title>
         航次号从<strong>开头</strong>匹配。列表按<strong>最新录入的排最前</strong>。
-        航次号<strong>不查重</strong>(可以重名)。删除后<strong>无法恢复</strong>;
+        航次号<strong>不是全库唯一</strong> —— 唯一的是「<strong>船 + 航次号</strong>」这一对:
+        同一条船下不能有重复的航次号,不同船之间可以重号(航次号是船公司自编的,重号很常见)。
+        <strong>船或航次号任一为空就不查重</strong>。删除后<strong>无法恢复</strong>;
         如果还有物流事件挂在这个航次上,后端会拒绝并说明原因。
       </template>
     </el-alert>
@@ -164,6 +166,8 @@ onMounted(() => {
 
     <el-table v-loading="loading" :data="rows" border row-key="id">
       <el-table-column prop="no" label="航次号" width="160" />
+      <!-- 船名后端联表带出来了,直接用 -->
+      <el-table-column prop="vslName" label="船舶" min-width="160" show-overflow-tooltip />
       <el-table-column
         prop="loadingPortName"
         label="起始港口"

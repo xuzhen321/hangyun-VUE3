@@ -4,6 +4,13 @@ import { fetchAllOrderStatuses } from '@/api/orderStatus'
 import { fetchAllContainerTypes } from '@/api/containerType'
 import { fetchAllContainerStatuses } from '@/api/containerStatus'
 import { fetchAllEventStatuses } from '@/api/eventStatus'
+import {
+  areaApi,
+  harborSizeApi,
+  portLevelApi,
+  portTypeApi,
+  timezoneApi,
+} from '@/api/portDict'
 
 /**
  * 字典缓存 —— 四个字典各实例化一次。
@@ -84,3 +91,19 @@ export const useEventStatusDict = createDictStore(
   fetchAllEventStatuses,
   i => [i.descriptionCn, i.descriptionEn].filter(Boolean).join(' / ')
 )
+
+// ---- 港口的五个小字典(25 节)。它们的 /options 都是"一次性返回全部",所以可以缓存 ----
+
+export const usePortAreaDict = createDictStore('portAreaDict', areaApi.fetchAll, i => i.areaName)
+
+export const usePortTimezoneDict = createDictStore(
+  'portTimezoneDict',
+  timezoneApi.fetchAll,
+  i => [i.timezoneUtc8, i.timezoneAsiaShanghai].filter(Boolean).join(' / ')
+)
+
+export const useHarborSizeDict = createDictStore('harborSizeDict', harborSizeApi.fetchAll, i => i.size)
+
+export const usePortLevelDict = createDictStore('portLevelDict', portLevelApi.fetchAll, i => String(i.level))
+
+export const usePortTypeDict = createDictStore('portTypeDict', portTypeApi.fetchAll, i => i.type)

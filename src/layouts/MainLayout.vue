@@ -27,7 +27,7 @@ const activeMenu = computed(() =>
       <el-aside width="200px" class="layout__aside">
         <el-menu
           :default-active="activeMenu"
-          :default-openeds="['customer', 'order', 'cargo', 'container', 'company', 'event']"
+          :default-openeds="['customer', 'order', 'cargo', 'container', 'company', 'event', 'port', 'vessel']"
           router
         >
           <el-menu-item index="/home">
@@ -125,8 +125,58 @@ const activeMenu = computed(() =>
               <span>事件状态管理</span>
             </el-menu-item>
             <el-menu-item index="/voyages">
-              <el-icon><Ship /></el-icon>
+              <el-icon><Promotion /></el-icon>
               <span>航次管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="port">
+            <template #title>
+              <el-icon><Position /></el-icon>
+              <span>港口管理</span>
+            </template>
+            <el-menu-item index="/ports">
+              <el-icon><Coordinate /></el-icon>
+              <span>港口信息管理</span>
+            </el-menu-item>
+            <el-menu-item index="/areas">
+              <el-icon><MapLocation /></el-icon>
+              <span>港口区域</span>
+            </el-menu-item>
+            <el-menu-item index="/timezones">
+              <el-icon><Clock /></el-icon>
+              <span>港口时区</span>
+            </el-menu-item>
+            <el-menu-item index="/harbor-sizes">
+              <el-icon><FullScreen /></el-icon>
+              <span>港口尺寸</span>
+            </el-menu-item>
+            <el-menu-item index="/port-levels">
+              <el-icon><Sort /></el-icon>
+              <span>港口级别</span>
+            </el-menu-item>
+            <el-menu-item index="/port-types">
+              <el-icon><PriceTag /></el-icon>
+              <span>港口类型</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="vessel">
+            <template #title>
+              <el-icon><Ship /></el-icon>
+              <span>船舶管理</span>
+            </template>
+            <el-menu-item index="/vessels">
+              <el-icon><Notebook /></el-icon>
+              <span>船舶信息管理</span>
+            </el-menu-item>
+            <el-menu-item index="/countries">
+              <el-icon><Memo /></el-icon>
+              <span>国家字典</span>
+            </el-menu-item>
+            <el-menu-item index="/ship-types">
+              <el-icon><DataLine /></el-icon>
+              <span>船舶类型</span>
             </el-menu-item>
           </el-sub-menu>
 

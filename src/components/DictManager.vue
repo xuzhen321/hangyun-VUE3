@@ -20,7 +20,10 @@ const props = defineProps({
    * 见 `constants/dict.js`。字段:
    *   name         字典名,拼按钮和弹窗标题用
    *   entityWord   删除确认里的主体词
-   *   columns      [{ prop, label, max, required }]
+   *   columns      [{ prop, label, max, required, immutable, kind, min, numMax, precision }]
+   *                  - 默认按**文本**渲染,`max` 是最大长度
+   *                  - `kind: 'number'` 改成数字输入,用 `min` / `numMax` / `precision`
+   *                    (`max` 这个词已经被"字符串长度"占了,所以数字上限叫 `numMax`)
    *   hint         顶部提示条文案
    *   builtinIds   可选;空/不传 = 没有内置概念
    *   builtinLabel 可选
@@ -96,6 +99,15 @@ const form = reactive({})
 const rules = computed(() => {
   const r = {}
   for (const col of columns) {
+    // 数字列单独处理:required 必须标 `type: 'number'`,
+    // 否则 async-validator 会拿字符串的规则去套数字(而且数字不能带 whitespace / maxlength)
+    if (col.kind === 'number') {
+      r[col.prop] = col.required
+        ? [{ required: true, type: 'number', message: `请输入${col.label}`, trigger: 'blur' }]
+        : []
+      continue
+    }
+
     const list = []
     if (col.required) {
       // whitespace: true 让"全是空格"也判为不通过
@@ -293,7 +305,19 @@ onMounted(() => {
               1. 内置行 —— 后端也会拒绝改,别让用户改了才收到 409
               2. 列上标了 immutable —— 一般是主键(如拖车号),建了就不能改
           -->
+          <el-input-number
+            v-if="col.kind === 'number'"
+            v-model="row['_' + col.prop]"
+            :min="col.min ?? 0"
+            :max="col.numMax"
+            :precision="col.precision ?? 0"
+            :controls="false"
+            :disabled="isBuiltinRow(row) || col.immutable"
+            style="width: 100%"
+            @change="row._dirty = isDirty(row)"
+          />
           <el-input
+            v-else
             v-model="row['_' + col.prop]"
             :maxlength="col.max"
             :disabled="isBuiltinRow(row) || col.immutable"
@@ -380,7 +404,19 @@ onMounted(() => {
           :label="col.label"
           :prop="col.prop"
         >
+          <!-- 数字列用数字输入(新增弹窗里不改 immutable,那个只管行内编辑) -->
+          <el-input-number
+            v-if="col.kind === 'number'"
+            v-model="form[col.prop]"
+            :min="col.min ?? 0"
+            :max="col.numMax"
+            :precision="col.precision ?? 0"
+            :controls="false"
+            :placeholder="`请输入${col.label}`"
+            style="width: 100%"
+          />
           <el-input
+            v-else
             v-model="form[col.prop]"
             :maxlength="col.max"
             :placeholder="`请输入${col.label}`"

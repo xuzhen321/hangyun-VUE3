@@ -114,6 +114,62 @@ const routes = [
         component: () => import('@/views/voyage/VoyageList.vue'),
         meta: { title: '航次管理' },
       },
+      // ---- 港口(文档 24 / 25 节)----
+      {
+        path: 'ports',
+        name: 'ports',
+        component: () => import('@/views/port/PortList.vue'),
+        meta: { title: '港口信息管理' },
+      },
+      {
+        path: 'areas',
+        name: 'areas',
+        component: () => import('@/views/portArea/PortAreaList.vue'),
+        meta: { title: '港口区域' },
+      },
+      {
+        path: 'timezones',
+        name: 'timezones',
+        component: () => import('@/views/portTimezone/PortTimezoneList.vue'),
+        meta: { title: '港口时区' },
+      },
+      {
+        path: 'harbor-sizes',
+        name: 'harborSizes',
+        component: () => import('@/views/harborSize/HarborSizeList.vue'),
+        meta: { title: '港口尺寸' },
+      },
+      {
+        path: 'port-levels',
+        name: 'portLevels',
+        component: () => import('@/views/portLevel/PortLevelList.vue'),
+        meta: { title: '港口级别' },
+      },
+      {
+        path: 'port-types',
+        name: 'portTypes',
+        component: () => import('@/views/portType/PortTypeList.vue'),
+        meta: { title: '港口类型' },
+      },
+      // ---- 船舶(文档 21 / 22 / 23 节)----
+      {
+        path: 'vessels',
+        name: 'vessels',
+        component: () => import('@/views/vessel/VesselList.vue'),
+        meta: { title: '船舶信息管理' },
+      },
+      {
+        path: 'countries',
+        name: 'countries',
+        component: () => import('@/views/country/CountryList.vue'),
+        meta: { title: '国家字典' },
+      },
+      {
+        path: 'ship-types',
+        name: 'shipTypes',
+        component: () => import('@/views/shipType/ShipTypeList.vue'),
+        meta: { title: '船舶类型' },
+      },
       {
         // 通用字典表:箱主 / 操作方 / 船东 / 管理公司都指向它,目前只有集装箱在用
         path: 'companies',

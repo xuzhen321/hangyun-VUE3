@@ -1,9 +1,28 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
+/**
+ * 后端地址。
+ *
+ * 📌 **默认按"当前页面是从哪个主机打开的"来推**,而不是写死 `localhost`。
+ *
+ * 原因:如果写死 `localhost:8080`,那局域网里另一台设备(手机、同事的机器)打开页面后,
+ * 浏览器会去请求**它自己的** localhost —— 那儿没有后端,于是**页面能打开、但数据全是空的**。
+ * 这种"看起来正常其实全挂"的故障最难排查。
+ *
+ * 按主机名推之后,同一个 dev server 既能在 `localhost:5173` 用,
+ * 也能被 `192.168.x.x:5173` 访问,两边都指向同一台后端,不用改配置。
+ *
+ * 想固定成别的地址(比如后端在另一台机器):在 `.env.development` 里设 `VITE_API_BASE_URL` 覆盖。
+ */
+const API_PORT = import.meta.env.VITE_API_PORT || '8080'
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL ||
+  `${window.location.protocol}//${window.location.hostname}:${API_PORT}`
+
 const request = axios.create({
   // 文档第 1 节:无路径前缀,跨域已全放行,不需要代理、不需要带凭证/Cookie
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL,
   timeout: 15000,
 })
 
