@@ -97,6 +97,24 @@ const routes = [
         meta: { title: '提空箱登记' },
       },
       {
+        path: 'container-events',
+        name: 'containerEvents',
+        component: () => import('@/views/containerEvent/ContainerEventList.vue'),
+        meta: { title: '物流事件管理' },
+      },
+      {
+        path: 'event-statuses',
+        name: 'eventStatuses',
+        component: () => import('@/views/eventStatus/EventStatusList.vue'),
+        meta: { title: '事件状态管理' },
+      },
+      {
+        path: 'voyages',
+        name: 'voyages',
+        component: () => import('@/views/voyage/VoyageList.vue'),
+        meta: { title: '航次管理' },
+      },
+      {
         // 通用字典表:箱主 / 操作方 / 船东 / 管理公司都指向它,目前只有集装箱在用
         path: 'companies',
         name: 'companies',

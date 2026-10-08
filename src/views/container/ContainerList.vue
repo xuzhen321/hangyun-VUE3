@@ -9,6 +9,7 @@ import {
 } from '@/api/container'
 import { useContainerStatusDict } from '@/stores/dict'
 import ContainerFormDialog from './ContainerFormDialog.vue'
+import ContainerTrackDialog from './ContainerTrackDialog.vue'
 
 const statusDict = useContainerStatusDict()
 const router = useRouter()
@@ -56,6 +57,15 @@ const selectedRows = ref([])
 
 const dialogVisible = ref(false)
 const editingRow = ref(null)
+
+// 「查看轨迹」弹窗
+const trackVisible = ref(false)
+const trackNo = ref('')
+
+function onViewTrack(row) {
+  trackNo.value = row.no
+  trackVisible.value = true
+}
 
 /** 箱型显示成「普通箱 / 40英尺」,两栏都可能为空 */
 const fmtType = row => [row.typeName, row.typeSize].filter(Boolean).join(' / ') || '—'
@@ -283,8 +293,10 @@ onMounted(() => {
         show-overflow-tooltip
       />
       <el-table-column prop="insertTime" label="创建时间" width="170" />
-      <el-table-column label="操作" width="280" fixed="right">
+      <el-table-column label="操作" width="360" fixed="right">
         <template #default="{ row }">
+          <!-- 轨迹是"这个箱子发生过什么"的时间轴,任何箱子都能看(没有事件就是空) -->
+          <el-button link type="primary" @click="onViewTrack(row)">查看轨迹</el-button>
           <!-- 没关联公司时不给点:跳过去只能是一张没过滤的全量列表 -->
           <el-button
             link
@@ -324,6 +336,8 @@ onMounted(() => {
     />
 
     <ContainerFormDialog v-model="dialogVisible" :row="editingRow" @success="loadList" />
+
+    <ContainerTrackDialog v-model="trackVisible" :no="trackNo" />
   </div>
 </template>
 

@@ -3,6 +3,7 @@ import { fetchAllCustomerStatuses } from '@/api/customerStatus'
 import { fetchAllOrderStatuses } from '@/api/orderStatus'
 import { fetchAllContainerTypes } from '@/api/containerType'
 import { fetchAllContainerStatuses } from '@/api/containerStatus'
+import { fetchAllEventStatuses } from '@/api/eventStatus'
 
 /**
  * 字典缓存 —— 四个字典各实例化一次。
@@ -74,5 +75,12 @@ export const useContainerTypeDict = createDictStore(
 export const useContainerStatusDict = createDictStore(
   'containerStatusDict',
   fetchAllContainerStatuses,
+  i => [i.descriptionCn, i.descriptionEn].filter(Boolean).join(' / ')
+)
+
+/** 事件状态。下拉显示拼成「航行中 / In Transit」 */
+export const useEventStatusDict = createDictStore(
+  'eventStatusDict',
+  fetchAllEventStatuses,
   i => [i.descriptionCn, i.descriptionEn].filter(Boolean).join(' / ')
 )
