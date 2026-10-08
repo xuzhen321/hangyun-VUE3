@@ -2,6 +2,8 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { deletePort, fetchPorts, searchPorts } from '@/api/port'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { fetchCountryOptions } from '@/api/country'
 import { useRemoteSelect } from '@/composables/useRemoteSelect'
 import PortFormDialog from './PortFormDialog.vue'
@@ -17,6 +19,8 @@ const query = reactive({
   keyword: '', // 前缀匹配 五字码 / 中文名 / 英文名
   countryId: null,
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -99,6 +103,14 @@ async function onDelete(row) {
   }
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/ports/export', cleanQuery(query), '港口')
+}
+
 onMounted(() => {
   loadCountryList('')
   loadList()
@@ -152,6 +164,7 @@ onMounted(() => {
     <div class="toolbar">
       <el-button type="primary" @click="onCreate">+ 新增港口</el-button>
       <!-- 港口没有批量删除接口,所以不放"批量删除"、表格也不放复选框列 -->
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <!--

@@ -1,7 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '@/layouts/MainLayout.vue'
+import { getToken } from '@/utils/token'
 
 const routes = [
+  {
+    // 登录页**不套 MainLayout** —— 没登录的人不该看到侧边菜单
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/LoginView.vue'),
+    meta: { title: '登录', public: true },
+  },
   {
     path: '/',
     component: MainLayout,
@@ -170,19 +178,54 @@ const routes = [
         component: () => import('@/views/shipType/ShipTypeList.vue'),
         meta: { title: '船舶类型' },
       },
+      // ---- 认证与日志(文档 26~29 节)----
       {
-        // 通用字典表:箱主 / 操作方 / 船东 / 管理公司都指向它,目前只有集装箱在用
-        path: 'companies',
-        name: 'companies',
-        component: () => import('@/views/company/CompanyList.vue'),
-        meta: { title: '公司信息管理' },
+        path: 'users',
+        name: 'users',
+        component: () => import('@/views/user/UserList.vue'),
+        meta: { title: '系统用户' },
+      },
+      {
+        path: 'operation-types',
+        name: 'operationTypes',
+        component: () => import('@/views/operationType/OperationTypeList.vue'),
+        meta: { title: '操作类型' },
+      },
+      {
+        path: 'logs',
+        name: 'logs',
+        component: () => import('@/views/log/LogList.vue'),
+        meta: { title: '操作日志' },
       },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/home' },
 ]
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes,
 })
+
+/**
+ * 路由守卫:没登录就踢到登录页。
+ *
+ * ⚠️ 这里**只检查"有没有令牌",不校验令牌有效性** —— 有效性由服务端说了算,
+ *    过期/伪造的令牌会在第一个接口请求时收到 401,由 request.js 的拦截器统一处理
+ *    (清令牌 + 跳登录页)。前端自己解析 JWT 算过期时间是重复劳动且容易出错。
+ *
+ * 📌 守卫里直接读 `getToken()` 而不是用 Pinia store ——
+ *    守卫 import store 会绕出 store → api → request → router 的环。
+ */
+router.beforeEach(to => {
+  const hasToken = !!getToken()
+  // 已登录还去登录页 → 直接送回首页
+  if (to.name === 'login' && hasToken) return { path: '/' }
+  // 未登录访问受保护页面 → 去登录页,并记住原来想去哪
+  if (!to.meta.public && !hasToken) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  return true
+})
+
+export default router

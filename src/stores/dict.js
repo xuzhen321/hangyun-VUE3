@@ -4,6 +4,7 @@ import { fetchAllOrderStatuses } from '@/api/orderStatus'
 import { fetchAllContainerTypes } from '@/api/containerType'
 import { fetchAllContainerStatuses } from '@/api/containerStatus'
 import { fetchAllEventStatuses } from '@/api/eventStatus'
+import { fetchAllOperationTypes } from '@/api/operationType'
 import {
   areaApi,
   harborSizeApi,
@@ -107,3 +108,11 @@ export const useHarborSizeDict = createDictStore('harborSizeDict', harborSizeApi
 export const usePortLevelDict = createDictStore('portLevelDict', portLevelApi.fetchAll, i => String(i.level))
 
 export const usePortTypeDict = createDictStore('portTypeDict', portTypeApi.fetchAll, i => i.type)
+
+/** 操作类型(29 节的日志筛选下拉用)。/options 一次性返回全部,所以可以缓存 */
+export const useOperationTypeDict = createDictStore(
+  'operationTypeDict',
+  fetchAllOperationTypes,
+  // ⚠️ 原样显示后端的 type(INSERT / UPDATE 这种英文)—— 不做中文翻译
+  i => i.type
+)

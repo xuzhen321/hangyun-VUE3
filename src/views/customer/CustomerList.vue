@@ -3,6 +3,8 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { batchDeleteCustomers, deleteCustomer, fetchCustomers } from '@/api/customer'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { CUSTOMER_STATUS } from '@/constants/dict'
 import { tagStyleOf } from '@/constants/status'
 import { useCustomerStatusDict } from '@/stores/dict'
@@ -25,6 +27,8 @@ const query = reactive({
 })
 
 // 命名避开 api 层的 page/size
+const { exporting, doExport } = useExport()
+
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
 const loading = ref(false)
@@ -157,6 +161,26 @@ async function onBatchDelete() {
   }
 }
 
+/** 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ *
+ * ⚠️ **这两个时间字段在页面上叫 `validFrom` / `validTo`,后端要的是
+ *    `qualificationValidToFrom` / `...To`** —— 列表接口那边是靠 api 层翻译的,
+ *    导出这里也得自己翻一次,不能把 query 原样扔过去(原名后端不认)。
+ *    空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  const { validFrom, validTo, ...rest } = query
+  doExport(
+    '/customers/export',
+    cleanQuery({
+      ...rest,
+      qualificationValidToFrom: validFrom,
+      qualificationValidToTo: validTo,
+    }),
+    '客户'
+  )
+}
+
 onMounted(() => {
   // 从订单页点客户姓名 →「查询客户详细信息」跳过来时带着 ?name=,
   // 把它填进姓名查询框,列表直接定位到这位客户。
@@ -252,6 +276,7 @@ onMounted(() => {
       >
         批量删除
       </el-button>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table

@@ -7,6 +7,8 @@ import {
   deleteContainer,
   fetchContainers,
 } from '@/api/container'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { useContainerStatusDict } from '@/stores/dict'
 import ContainerFormDialog from './ContainerFormDialog.vue'
 import ContainerTrackDialog from './ContainerTrackDialog.vue'
@@ -49,6 +51,8 @@ async function clearCompanyFilter() {
   await router.replace({ path: '/containers', query: rest })
   onSearch()
 }
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -185,6 +189,24 @@ async function onBatchDelete() {
   }
 }
 
+/** 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ *
+ * ⚠️ **公司筛选也要带上** —— 它是从公司页「集装箱详情」跳过来时带的上下文,
+ *    不在查询表单里,如果漏了,导出的会是全部集装箱而不是当前看到的那些。
+ *    空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport(
+    '/containers/export',
+    cleanQuery({
+      ...query,
+      ownerId: companyFilter.value?.ownerId,
+      operatorId: companyFilter.value?.operatorId,
+    }),
+    '集装箱'
+  )
+}
+
 onMounted(() => {
   statusDict.load()
   loadList()
@@ -256,6 +278,7 @@ onMounted(() => {
       >
         {{ companyFilter.role }}:{{ companyFilter.name || '已选公司' }}
       </el-tag>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table

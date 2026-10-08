@@ -7,6 +7,8 @@ import {
   deletePackingRecord,
   fetchPackingRecords,
 } from '@/api/packingRecord'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import PackingFormDialog from '@/components/PackingFormDialog.vue'
 
 const route = useRoute()
@@ -17,6 +19,8 @@ const query = reactive({
   orderId: '', // 精确,整串
   containerNo: '', // 精确,整串
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -125,6 +129,14 @@ async function onBatchDelete() {
   }
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/cargo-container-results/export', cleanQuery(query), '装箱登记')
+}
+
 onMounted(() => {
   // 从订单货物页点「登记查询」跳过来时带着 ?orderId=,填进筛选框直接定位。
   // ⚠️ 11.1 没有 cargoId 参数,所以只能按**订单号**筛 ——
@@ -189,6 +201,7 @@ onMounted(() => {
       >
         批量删除
       </el-button>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table

@@ -3,6 +3,8 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { batchDeleteOrders, deleteOrder, fetchOrders } from '@/api/order'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { ORDER_STATUS } from '@/constants/dict'
 import { tagStyleOf } from '@/constants/status'
 import { useOrderStatusDict } from '@/stores/dict'
@@ -20,6 +22,8 @@ const query = reactive({
   orderDateTo: '',
   status: null,
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -193,6 +197,14 @@ async function onBatchDelete() {
   }
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/orders/export', cleanQuery(query), '订单')
+}
+
 onMounted(() => {
   dict.load()
   loadList()
@@ -276,6 +288,7 @@ onMounted(() => {
       >
         批量删除
       </el-button>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <!-- row-key 用订单号字符串本身,千万不要包一层 Number() -->

@@ -3,6 +3,8 @@ import { h, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { batchDeleteVessels, deleteVessel, fetchVessels } from '@/api/vessel'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { fetchShipTypeOptions } from '@/api/shipType'
 import { fetchCountryOptions } from '@/api/country'
 import { useRemoteSelect } from '@/composables/useRemoteSelect'
@@ -15,6 +17,8 @@ const query = reactive({
   countryId: null,
   vesselTypeId: null,
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -154,6 +158,14 @@ async function onBatchDelete() {
   }
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/vessels/export', cleanQuery(query), '船舶')
+}
+
 onMounted(() => {
   // 从物流事件页点「查看船舶」跳过来时带着 ?keyword=<船名>,填进关键字直接定位。
   // ⚠️ 只能用**船名**筛,而且是**前缀匹配** —— 事件行里只有 `vslName` 没有 `vslId`。
@@ -233,6 +245,7 @@ onMounted(() => {
       >
         批量删除
       </el-button>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table

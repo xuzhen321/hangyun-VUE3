@@ -7,6 +7,8 @@ import {
   deleteContainerEvent,
   fetchContainerEvents,
 } from '@/api/containerEvent'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { useEventStatusDict } from '@/stores/dict'
 import ContainerEventFormDialog from './ContainerEventFormDialog.vue'
 
@@ -19,6 +21,8 @@ const query = reactive({
   eventTimeFrom: '',
   eventTimeTo: '',
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -155,6 +159,14 @@ async function onBatchDelete() {
   }
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/container-events/export', cleanQuery(query), '物流事件')
+}
+
 onMounted(() => {
   statusDict.load()
   loadList()
@@ -235,6 +247,7 @@ onMounted(() => {
       >
         批量删除
       </el-button>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table

@@ -3,6 +3,8 @@ import { h, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { batchDeleteCargos, deleteCargo, fetchCargos } from '@/api/cargo'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { fetchOrder } from '@/api/order'
 import CargoFormDialog from '@/components/CargoFormDialog.vue'
 import PackingFormDialog from '@/components/PackingFormDialog.vue'
@@ -15,6 +17,8 @@ const query = reactive({
   cargoTypeName: '', // 前缀匹配
   orderId: '', // 精确匹配,整串
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -193,6 +197,14 @@ function onSizeChange() {
   loadList()
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/cargos/export', cleanQuery(query), '订单货物')
+}
+
 onMounted(() => {
   // 两个入口都会把筛选条件带在 URL 上,直接填好,省得用户再敲一遍
   //   订单列表点订单号        → ?orderId=xxx
@@ -253,6 +265,7 @@ onMounted(() => {
       >
         批量删除
       </el-button>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table

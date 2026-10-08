@@ -1,8 +1,13 @@
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessageBox } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import { getToken } from '@/utils/token'
 
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
 
 /**
  * 菜单高亮项。
@@ -13,6 +18,31 @@ const route = useRoute()
 const activeMenu = computed(() =>
   route.path.startsWith('/customers') ? '/customers' : route.path
 )
+
+/**
+ * 刷新页面后 Pinia 是空的,但令牌还在 —— 补拉一次当前用户,顶栏才能显示名字。
+ *
+ * 📌 如果令牌已经失效,这个请求会 401,由 `request.js` 的拦截器统一
+ *    「清令牌 + 跳登录页」,这里不用自己处理。
+ */
+onMounted(() => {
+  if (getToken() && !userStore.user) {
+    userStore.loadMe().catch(() => {
+      // 401 已在拦截器里处理过了
+    })
+  }
+})
+
+async function onLogout() {
+  try {
+    await ElMessageBox.confirm('确定退出登录吗?', '提示', { type: 'warning' })
+  } catch {
+    return // 用户取消
+  }
+
+  await userStore.logout()
+  router.replace({ name: 'login' })
+}
 </script>
 
 <template>
@@ -20,6 +50,19 @@ const activeMenu = computed(() =>
     <!-- 顶部通栏(版式取自原型图) -->
     <el-header class="layout__header">
       <h1 class="layout__title">集装箱物流信息管理系统</h1>
+
+      <!-- 右侧:当前登录用户 + 登出 -->
+      <el-dropdown v-if="userStore.displayName" trigger="click" @command="onLogout">
+        <span class="layout__user">
+          {{ userStore.displayName }}
+          <el-icon><ArrowDown /></el-icon>
+        </span>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </el-header>
 
     <el-container class="layout__body">
@@ -27,7 +70,17 @@ const activeMenu = computed(() =>
       <el-aside width="200px" class="layout__aside">
         <el-menu
           :default-active="activeMenu"
-          :default-openeds="['customer', 'order', 'cargo', 'container', 'company', 'event', 'port', 'vessel']"
+          :default-openeds="[
+            'customer',
+            'order',
+            'cargo',
+            'container',
+            'company',
+            'event',
+            'port',
+            'vessel',
+            'system',
+          ]"
           router
         >
           <el-menu-item index="/home">
@@ -180,14 +233,22 @@ const activeMenu = computed(() =>
             </el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="company">
+          <el-sub-menu index="system">
             <template #title>
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>公司管理</span>
+              <el-icon><Setting /></el-icon>
+              <span>系统管理</span>
             </template>
-            <el-menu-item index="/companies">
-              <el-icon><Briefcase /></el-icon>
-              <span>公司信息管理</span>
+            <el-menu-item index="/users">
+              <el-icon><UserFilled /></el-icon>
+              <span>系统用户</span>
+            </el-menu-item>
+            <el-menu-item index="/operation-types">
+              <el-icon><Operation /></el-icon>
+              <span>操作类型</span>
+            </el-menu-item>
+            <el-menu-item index="/logs">
+              <el-icon><DocumentCopy /></el-icon>
+              <span>操作日志</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>
@@ -209,6 +270,7 @@ const activeMenu = computed(() =>
 .layout__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 60px;
   background: linear-gradient(90deg, #1f6fd0 0%, #17a2c9 55%, #7ddc3f 100%);
 }
@@ -221,6 +283,16 @@ const activeMenu = computed(() =>
   color: #fff;
 }
 
+.layout__user {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
 .layout__body {
   height: calc(100vh - 60px);
 }
@@ -228,6 +300,7 @@ const activeMenu = computed(() =>
 .layout__aside {
   background: #fff;
   border-right: 1px solid #e6e6e6;
+  overflow: auto;
 }
 
 .layout__aside :deep(.el-menu) {

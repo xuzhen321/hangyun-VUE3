@@ -6,6 +6,8 @@ import {
   deleteContainerTrailerRecord,
   fetchContainerTrailerRecords,
 } from '@/api/containerTrailerRecord'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import ContainerTrailerRecordFormDialog from './ContainerTrailerRecordFormDialog.vue'
 
 /** 四个筛选条件:两个前缀匹配 + 一个进场时间闭区间 */
@@ -15,6 +17,8 @@ const query = reactive({
   dcInDateFrom: '',
   dcInDateTo: '',
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -133,6 +137,14 @@ async function onBatchDelete() {
   }
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/container-trailer-records/export', cleanQuery(query), '提空箱登记')
+}
+
 onMounted(loadList)
 </script>
 
@@ -202,6 +214,7 @@ onMounted(loadList)
       >
         批量删除
       </el-button>
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table

@@ -25,8 +25,8 @@ const props = defineProps({
    *                  - `kind: 'number'` 改成数字输入,用 `min` / `numMax` / `precision`
    *                    (`max` 这个词已经被"字符串长度"占了,所以数字上限叫 `numMax`)
    *   hint         顶部提示条文案
-   *   builtinIds   可选;空/不传 = 没有内置概念
-   *   builtinLabel 可选
+   *   builtinIds       可选;空/不传 = 没有内置概念
+   *   builtinLabel     可选;内置项的补充说明,会在 tooltip 里拼成「(正常/异常/注销)」那样
    *   search       可选;有就在列表上方渲染一个关键字查询框,{ param, label, placeholder }
    *   rowActions   可选;额外的行操作按钮,`[{ label, onClick(row) }]`,渲染在"保存/删除"前面
    *   api          { fetchPage, create, update, remove }
@@ -55,6 +55,7 @@ const keyField = props.config.keyField ?? 'id'
 const keyOf = row => row[keyField]
 
 /** 这一行是不是"内置"的(没有内置概念的字典恒为 false) */
+/** `hasBuiltin` 为 false 时整条短路 —— 没有内置概念的字典完全不受影响 */
 const isBuiltinRow = row => hasBuiltin && isBuiltin(keyOf(row))
 
 /** 可选的列表关键字查询。不配就没有查询框 */
@@ -82,8 +83,11 @@ function onResetSearch() {
 }
 
 const builtinIds = props.config.builtinIds ?? []
+/** 内置状态 id 白名单 —— 如客户状态的 1/2/3、订单状态的 1/4 */
 const hasBuiltin = builtinIds.length > 0
 const builtinLabel = props.config.builtinLabel ?? ''
+/** 有 builtinLabel 才拼成「(正常/异常/注销)」,没有就留空,免得出现「系统内置状态()」 */
+const builtinTip = builtinLabel ? `(${builtinLabel})` : ''
 const isBuiltin = id => isBuiltinOf(props.config, id)
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
@@ -344,7 +348,7 @@ onMounted(() => {
           <!-- 禁用的按钮不触发鼠标事件,tooltip 要包一层 span 才能生效 -->
           <el-tooltip
             :disabled="!isBuiltinRow(row)"
-            :content="`系统内置状态(${builtinLabel})不允许修改`"
+            :content="`系统内置状态${builtinTip}不允许修改`"
             placement="top"
           >
             <span>
@@ -361,7 +365,7 @@ onMounted(() => {
 
           <el-tooltip
             :disabled="!isBuiltinRow(row)"
-            :content="`系统内置状态(${builtinLabel})不允许删除`"
+            :content="`系统内置状态${builtinTip}不允许删除`"
             placement="top"
           >
             <span>

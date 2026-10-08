@@ -3,6 +3,8 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { deleteVoyage, fetchVoyages } from '@/api/voyage'
+import { cleanQuery } from '@/utils/exportExcel'
+import { useExport } from '@/composables/useExport'
 import { searchPorts } from '@/api/port'
 import { useRemoteSelect } from '@/composables/useRemoteSelect'
 import VoyageFormDialog from './VoyageFormDialog.vue'
@@ -13,6 +15,8 @@ const query = reactive({
   no: '', // 航次号,前缀匹配
   loadingPortId: null, // 起始港口 ID,精确匹配
 })
+
+const { exporting, doExport } = useExport()
 
 const pager = reactive({ current: 1, size: 20, total: 0 })
 const rows = ref([])
@@ -96,6 +100,14 @@ async function onDelete(row) {
   }
 }
 
+/**
+ * 导出。**查询条件原样带过去** —— 导出的内容和你列表里看到的一致。
+ * 空的那几项由 cleanQuery 剔掉,不然后端会当成"按空值筛"。
+ */
+function onExport() {
+  doExport('/voyages/export', cleanQuery(query), '航次')
+}
+
 onMounted(() => {
   // 从物流事件页点「查看航次」跳过来时带着 ?no=,填进查询框直接定位。
   // ⚠️ 航次号的筛选是**前缀匹配**,不是按 id 精确查 ——
@@ -162,6 +174,7 @@ onMounted(() => {
     <div class="toolbar">
       <el-button type="primary" @click="onCreate">+ 新增航次</el-button>
       <!-- 航次没有批量删除接口,所以不放"批量删除"、表格也不放复选框列 -->
+      <el-button :loading="exporting" @click="onExport">导出</el-button>
     </div>
 
     <el-table v-loading="loading" :data="rows" border row-key="id">
