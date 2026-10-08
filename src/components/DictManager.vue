@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { isBuiltinOf } from '@/constants/status'
 
@@ -23,15 +24,49 @@ const props = defineProps({
    *   hint         顶部提示条文案
    *   builtinIds   可选;空/不传 = 没有内置概念
    *   builtinLabel 可选
+   *   search       可选;有就在列表上方渲染一个关键字查询框,{ param, label, placeholder }
+   *   rowActions   可选;额外的行操作按钮,`[{ label, onClick(row) }]`,渲染在"保存/删除"前面
    *   api          { fetchPage, create, update, remove }
-   *   useDict      () => store
+   *   useDict      **可选**;该字典的下拉缓存 store。不传 = 这个字典没有"一次拉全量"的下拉
    */
   config: { type: Object, required: true },
 })
 
 // config 是静态配置,解构一次即可
 const { api, columns, hint, name } = props.config
-const dict = props.config.useDict()
+
+/**
+ * 下拉缓存 store —— **可选**。
+ *
+ * 只有"一次拉全量"的字典(`/xxx/options` 说不截断的)才有它;
+ * 像公司这种下拉接口**只返回前 20 条**的,缓存一份没有意义,下拉应该做成远程搜索,
+ * 所以那边不传 useDict,这里跳过刷新即可。
+ */
+const dict = props.config.useDict ? props.config.useDict() : null
+
+/** 可选的列表关键字查询。不配就没有查询框 */
+const searchCfg = props.config.search ?? null
+const keyword = ref('')
+
+/**
+ * 额外的行操作按钮(可选)。处理函数由**视图**提供 —— 它要跳路由,而 `constants/dict.js`
+ * 是纯配置、不该碰到 router。
+ */
+const rowActions = props.config.rowActions ?? []
+/** 操作列宽度按按钮个数撑开,免得挤成两行 */
+const actionColWidth = 160 + rowActions.length * 80
+
+const route = useRoute()
+
+function onSearch() {
+  pager.current = 1
+  loadTable()
+}
+
+function onResetSearch() {
+  keyword.value = ''
+  onSearch()
+}
 
 const builtinIds = props.config.builtinIds ?? []
 const hasBuiltin = builtinIds.length > 0
@@ -102,7 +137,12 @@ function collect(src, prefix = '') {
 async function loadTable() {
   loading.value = true
   try {
-    const data = await api.fetchPage({ page: pager.current, size: pager.size })
+    const data = await api.fetchPage({
+      page: pager.current,
+      size: pager.size,
+      // 只有配了 search 的字典才带这个参数
+      ...(searchCfg ? { [searchCfg.param]: keyword.value.trim() || undefined } : {}),
+    })
     // 删空当前页且不在第 1 页时回退一页,避免停在一条都没有的末页
     if (!data.list.length && pager.current > 1) {
       pager.current -= 1
@@ -125,7 +165,8 @@ function onSizeChange() {
 /** 字典变了,用到下拉的页面(表单、列表筛选)也要跟着更新 */
 async function afterMutate() {
   await loadTable()
-  await dict.refresh()
+  // 没有缓存 store 的字典(如公司)跳过 —— 它的下拉是远程搜索,不吃缓存
+  if (dict) await dict.refresh()
 }
 
 /** 行内保存:先本地校验一遍必填和长度,别等后端 400 */
@@ -191,11 +232,35 @@ async function onSubmit() {
   }
 }
 
-onMounted(loadTable)
+onMounted(() => {
+  // 支持从别处带 ?<search.param>= 跳进来 —— 集装箱列表的「查看箱主 / 查看操作方」就是这个用法。
+  // 参数名取自配置,所以任何配了 search 的字典都自动支持
+  const fromUrl = searchCfg ? route.query[searchCfg.param] : null
+  if (fromUrl) keyword.value = String(fromUrl)
+
+  loadTable()
+})
 </script>
 
 <template>
   <div class="page">
+    <!-- 可选的列表查询(配了 config.search 才有) -->
+    <el-form v-if="searchCfg" :inline="true" class="query-form" @submit.prevent>
+      <el-form-item :label="searchCfg.label">
+        <el-input
+          v-model="keyword"
+          :placeholder="searchCfg.placeholder"
+          clearable
+          style="width: 240px"
+          @keyup.enter="onSearch"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="onSearch">查询</el-button>
+        <el-button @click="onResetSearch">清空</el-button>
+      </el-form-item>
+    </el-form>
+
     <el-alert type="info" :closable="false" show-icon class="hint">
       <template #title>{{ hint }}</template>
     </el-alert>
@@ -225,8 +290,19 @@ onMounted(loadTable)
 
       <el-table-column prop="insertTime" label="创建时间" width="180" />
       <el-table-column prop="updateTime" label="修改时间" width="180" />
-      <el-table-column label="操作" width="160" fixed="right">
+      <el-table-column label="操作" :width="actionColWidth" fixed="right">
         <template #default="{ row }">
+          <!-- 配置里带的额外行操作(如公司页的「集装箱详情」) -->
+          <el-button
+            v-for="act in rowActions"
+            :key="act.label"
+            link
+            type="primary"
+            @click="act.onClick(row)"
+          >
+            {{ act.label }}
+          </el-button>
+
           <!-- 禁用的按钮不触发鼠标事件,tooltip 要包一层 span 才能生效 -->
           <el-tooltip
             :disabled="!(hasBuiltin && isBuiltin(row.id))"
