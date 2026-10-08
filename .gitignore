@@ -1,0 +1,15 @@
+# 依赖 / 产物
+node_modules
+dist
+dist-ssr
+
+# IDE 配置(含本机路径,提交了别人拉下来会冲突)
+.idea
+.vscode
+*.iml
+
+# 系统 / 本地
+*.local
+.DS_Store
+Thumbs.db
+npm-debug.log*
