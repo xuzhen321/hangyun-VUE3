@@ -89,3 +89,20 @@ export const deleteCargo = id => request.delete(`/cargos/${id}`)
  */
 export const batchDeleteCargos = ids =>
   request.delete('/cargos/batch', { data: { ids } })
+
+/**
+ * 货物下拉框(文档 10.6)—— **新增装箱结果时选"装的是哪批货"用**。
+ *
+ * 两个参数都可选,同时传就是 AND。固定最多返回 **20 条**,不是分页接口。
+ *
+ * ⚠️ **选项里必须同时显示「货物名称 + 订单号」。**
+ *    因为同名的货物可能出现在多张订单里(示例数据里"钢材"就有 4 条,分属不同订单),
+ *    只显示"钢材"的话用户根本分不出该选哪一条,**很可能把货装错单**。
+ */
+export const searchCargoOptions = ({ cargoTypeName, orderId } = {}) =>
+  request.get('/cargos/options', {
+    params: {
+      cargoTypeName: cargoTypeName || undefined,
+      orderId: orderId || undefined,
+    },
+  })

@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createCustomer, fetchCustomer, updateCustomer } from '@/api/customer'
-import { useCustomerStatusDict } from '@/stores/statusDict'
+import { useCustomerStatusDict } from '@/stores/dict'
 import { toPayload } from '@/utils/payload'
 
 const props = defineProps({

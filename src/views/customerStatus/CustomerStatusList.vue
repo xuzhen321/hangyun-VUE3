@@ -1,7 +1,7 @@
 <script setup>
-import StatusDictManager from '@/components/StatusDictManager.vue'
-import { CUSTOMER_STATUS } from '@/constants/status'
-import { useCustomerStatusDict } from '@/stores/statusDict'
+import DictManager from '@/components/DictManager.vue'
+import { CUSTOMER_STATUS } from '@/constants/dict'
+import { useCustomerStatusDict } from '@/stores/dict'
 import {
   fetchCustomerStatusPage as fetchPage,
   createCustomerStatus as create,
@@ -9,7 +9,7 @@ import {
   deleteCustomerStatus as remove,
 } from '@/api/customerStatus'
 
-// 页面全部行为都在 StatusDictManager 里,这里只接线
+// 页面全部行为都在 DictManager 里,这里只接线
 const config = {
   ...CUSTOMER_STATUS,
   api: { fetchPage, create, update, remove },
@@ -18,5 +18,5 @@ const config = {
 </script>
 
 <template>
-  <StatusDictManager :config="config" />
+  <DictManager :config="config" />
 </template>

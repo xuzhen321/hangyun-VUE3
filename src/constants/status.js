@@ -1,25 +1,9 @@
 /**
- * 状态字典的配置。
+ * 状态标签的配色规则(列表页"状态"那一列用)。
  *
- * 客户状态和订单状态的结构、接口、页面行为**完全一样**,只有内置 id 和文案不同,
- * 所以把差异集中在这里 —— 页面和通用组件都不硬编码任何一方的细节。
+ * 规则本身和具体实体无关 —— 把配置对象传进来就行,所以这里不 import 任何字典配置。
+ * 四个字典各自的配置在 `constants/dict.js`。
  */
-
-/** 客户状态:内置 1 正常 / 2 异常 / 3 注销 */
-export const CUSTOMER_STATUS = {
-  builtinIds: [1, 2, 3],
-  builtinLabel: '正常/异常/注销',
-  entityWord: '客户',
-  tagTypes: { 1: 'success', 2: 'warning', 3: 'danger' },
-}
-
-/** 订单状态:内置 1 已确认 / 2 执行中 / 3 已完成 / 4 已取消 */
-export const ORDER_STATUS = {
-  builtinIds: [1, 2, 3, 4],
-  builtinLabel: '已确认/执行中/已完成/已取消',
-  entityWord: '订单',
-  tagTypes: { 1: 'primary', 2: 'warning', 3: 'success', 4: 'danger' },
-}
 
 /**
  * 自定义状态:两个实体统一用这一套。
@@ -36,10 +20,10 @@ export const CUSTOM_TAG = { type: 'info', effect: 'plain' }
  * 配色将来调整时,靠颜色判断的逻辑会静默失效。
  */
 export function tagStyleOf(config, id) {
-  return config.builtinIds.includes(id)
-    ? { type: config.tagTypes[id] ?? 'info', effect: 'light' }
+  return config.builtinIds?.includes(id)
+    ? { type: config.tagTypes?.[id] ?? 'info', effect: 'light' }
     : { ...CUSTOM_TAG }
 }
 
 /** 是否系统内置状态 —— 不允许改名、不允许删除 */
-export const isBuiltinOf = (config, id) => config.builtinIds.includes(id)
+export const isBuiltinOf = (config, id) => !!config.builtinIds?.includes(id)

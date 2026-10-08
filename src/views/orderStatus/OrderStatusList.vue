@@ -1,7 +1,7 @@
 <script setup>
-import StatusDictManager from '@/components/StatusDictManager.vue'
-import { ORDER_STATUS } from '@/constants/status'
-import { useOrderStatusDict } from '@/stores/statusDict'
+import DictManager from '@/components/DictManager.vue'
+import { ORDER_STATUS } from '@/constants/dict'
+import { useOrderStatusDict } from '@/stores/dict'
 import {
   fetchOrderStatusPage as fetchPage,
   createOrderStatus as create,
@@ -18,5 +18,5 @@ const config = {
 </script>
 
 <template>
-  <StatusDictManager :config="config" />
+  <DictManager :config="config" />
 </template>

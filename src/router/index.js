@@ -52,11 +52,30 @@ const routes = [
         meta: { title: '货物种类管理' },
       },
       {
-        // 只读。订单列表的「货物查询」会带着 ?orderId= 跳到这里
+        // 订单列表的「货物查询」会带着 ?orderId= 跳到这里
         path: 'cargos',
         name: 'cargos',
         component: () => import('@/views/cargo/CargoList.vue'),
         meta: { title: '订单货物管理' },
+      },
+      {
+        // 路径和接口 /cargo-container-results 保持一致,便于对照文档
+        path: 'cargo-container-results',
+        name: 'packingRecords',
+        component: () => import('@/views/packing/PackingList.vue'),
+        meta: { title: '装箱情况登记管理' },
+      },
+      {
+        path: 'container-types',
+        name: 'containerTypes',
+        component: () => import('@/views/containerType/ContainerTypeList.vue'),
+        meta: { title: '箱型管理' },
+      },
+      {
+        path: 'container-statuses',
+        name: 'containerStatuses',
+        component: () => import('@/views/containerStatus/ContainerStatusList.vue'),
+        meta: { title: '集装箱状态管理' },
       },
     ],
   },

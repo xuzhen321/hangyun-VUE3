@@ -3,8 +3,9 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { batchDeleteCustomers, deleteCustomer, fetchCustomers } from '@/api/customer'
-import { CUSTOMER_STATUS, tagStyleOf } from '@/constants/status'
-import { useCustomerStatusDict } from '@/stores/statusDict'
+import { CUSTOMER_STATUS } from '@/constants/dict'
+import { tagStyleOf } from '@/constants/status'
+import { useCustomerStatusDict } from '@/stores/dict'
 import CustomerFormDialog from './CustomerFormDialog.vue'
 
 const dict = useCustomerStatusDict()

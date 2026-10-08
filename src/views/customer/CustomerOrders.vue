@@ -2,7 +2,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchCustomerOrders } from '@/api/customer'
-import { ORDER_STATUS, tagStyleOf } from '@/constants/status'
+import { ORDER_STATUS } from '@/constants/dict'
+import { tagStyleOf } from '@/constants/status'
 
 const route = useRoute()
 const router = useRouter()

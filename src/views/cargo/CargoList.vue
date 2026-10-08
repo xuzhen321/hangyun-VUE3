@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { batchDeleteCargos, deleteCargo, fetchCargos } from '@/api/cargo'
 import { fetchOrder } from '@/api/order'
 import CargoFormDialog from '@/components/CargoFormDialog.vue'
+import PackingFormDialog from '@/components/PackingFormDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -73,6 +74,36 @@ const editingRow = ref(null)
 function onEdit(row) {
   editingRow.value = row
   dialogVisible.value = true
+}
+
+// 「登记装箱」:把这一行当货物带进弹窗,货物字段预先选好
+const packingVisible = ref(false)
+const packingCargo = ref(null)
+
+/**
+ * 把这条货物登记进某个集装箱。
+ *
+ * ⚠️ 装箱记录里"货物"和"集装箱"都是**实体引用,必须选已有记录**。
+ *    从这一行进来货物是预定好的,用户只需要挑集装箱 + 填数量,
+ *    也就避开了"同名货物分属不同订单、选错就装错单"的问题。
+ */
+function onRegisterPacking(row) {
+  packingCargo.value = row
+  packingVisible.value = true
+}
+
+/**
+ * 跳到装箱情况登记管理,看这条货物所在的订单都登记了哪些装箱记录。
+ *
+ * ⚠️ 只能按**订单号**筛 —— 装箱结果列表(11.1)的参数只有 cargoTypeName / orderId / containerNo,
+ *    **没有 cargoId**。所以点某一条货物,看到的是**这张订单下的全部**装箱记录,
+ *    不是这一条货物的。要精确到货物得让后端在 11.1 加个 cargoId 参数。
+ */
+function onViewPacking(row) {
+  router.push({
+    path: '/cargo-container-results',
+    query: { orderId: row.orderId },
+  })
 }
 
 async function onDelete(row) {
@@ -263,8 +294,18 @@ onMounted(() => {
       <el-table-column prop="quantity" label="数量" width="120" align="right" />
       <el-table-column prop="insertTime" label="创建时间" width="180" />
       <el-table-column prop="updateTime" label="修改时间" width="180" />
-      <el-table-column label="操作" width="130" fixed="right">
+      <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" @click="onRegisterPacking(row)">登记装箱</el-button>
+          <!-- 没关联订单时不给点:过去只能是一张没有过滤的全量列表 -->
+          <el-button
+            link
+            type="primary"
+            :disabled="!row.orderId"
+            @click="onViewPacking(row)"
+          >
+            登记查询
+          </el-button>
           <el-button link type="primary" @click="onEdit(row)">编辑</el-button>
           <el-button link type="danger" @click="onDelete(row)">删除</el-button>
         </template>
@@ -354,6 +395,12 @@ onMounted(() => {
 
     <!-- 编辑货物。没有 GET /cargos/{id},所以整行直接传进去 -->
     <CargoFormDialog v-model="dialogVisible" :row="editingRow" @success="loadList" />
+
+    <!--
+      登记装箱:这一行当货物预选进弹窗。
+      不监听 success:装箱记录不属于这一页的数据,登记完这一页没有变化。
+    -->
+    <PackingFormDialog v-model="packingVisible" :cargo="packingCargo" />
   </div>
 </template>
 

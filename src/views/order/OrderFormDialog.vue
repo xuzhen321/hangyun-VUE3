@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus'
 import { createOrder, fetchOrder, updateOrder } from '@/api/order'
 import { searchCustomerOptions } from '@/api/customer'
 import { searchPorts } from '@/api/port'
-import { useOrderStatusDict } from '@/stores/statusDict'
+import { useOrderStatusDict } from '@/stores/dict'
 import { debounce } from '@/utils/debounce'
 import { toPayload } from '@/utils/payload'
 
