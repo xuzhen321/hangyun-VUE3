@@ -13,3 +13,8 @@ dist-ssr
 .DS_Store
 Thumbs.db
 npm-debug.log*
+
+# 文档不进仓库(接口文档、设计方案等;README 保留)
+*.md
+!README.md
+*.docx
