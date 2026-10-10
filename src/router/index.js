@@ -178,6 +178,13 @@ const routes = [
         component: () => import('@/views/shipType/ShipTypeList.vue'),
         meta: { title: '船舶类型' },
       },
+      {
+        // 通用字典表:箱主 / 操作方 / 船东 / 管理公司都指向它,目前只有集装箱在用
+        path: 'companies',
+        name: 'companies',
+        component: () => import('@/views/company/CompanyList.vue'),
+        meta: { title: '公司信息管理' },
+      },
       // ---- 认证与日志(文档 26~29 节)----
       {
         path: 'users',

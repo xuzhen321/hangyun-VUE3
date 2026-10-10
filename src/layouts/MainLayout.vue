@@ -164,6 +164,17 @@ async function onLogout() {
             </el-menu-item>
           </el-sub-menu>
 
+          <el-sub-menu index="company">
+            <template #title>
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>公司管理</span>
+            </template>
+            <el-menu-item index="/companies">
+              <el-icon><Briefcase /></el-icon>
+              <span>公司信息管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
           <el-sub-menu index="event">
             <template #title>
               <el-icon><Compass /></el-icon>
